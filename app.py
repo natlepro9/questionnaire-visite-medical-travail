@@ -10,11 +10,7 @@ st.title("Dossier de Visite Médicale")
 with st.expander("1. Informations personnelles", expanded=True):
     nom = st.text_input("Nom")
     prenom = st.text_input("Prénom")
-    date_nais = st.date_input(
-        "Date de naissance", 
-        min_value=datetime.date(1900, 1, 1), 
-        max_value=datetime.date.today()
-    )
+    date_nais = st.date_input("Date de naissance", min_value=datetime.date(1900, 1, 1), max_value=datetime.date.today())
     sexe = st.selectbox("Sexe", ["Masculin", "Féminin", "Autre"])
     adresse = st.text_area("Adresse")
     tel = st.text_input("Téléphone")
@@ -59,16 +55,19 @@ if st.button("Générer le Dossier Médical"):
     pdf.add_page()
     pdf.set_margins(15, 15, 15)
     
+    # Largeur utile de la page (210 - 15 - 15 = 180mm)
+    largeur = 180
+    
     if os.path.exists("logo.jpg"):
         pdf.image("logo.jpg", x=15, y=15, w=30)
 
     pdf.ln(25)
     pdf.set_font("Arial", 'B', 16)
-    pdf.cell(0, 10, "DOSSIER DE VISITE MEDICALE", ln=True, align='C')
+    pdf.multi_cell(largeur, 10, "DOSSIER DE VISITE MEDICALE", 0, 'C')
     pdf.ln(10)
     
     pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Date : {date.today()} | Patient : {nom} {prenom}", ln=True)
+    pdf.multi_cell(largeur, 8, f"Date : {date.today()} | Patient : {nom} {prenom}")
     pdf.ln(5)
     
     sections = [
@@ -82,12 +81,13 @@ if st.button("Générer le Dossier Médical"):
     
     for titre, contenu in sections:
         pdf.set_font("Arial", 'B', 12)
-        pdf.cell(0, 10, titre, ln=True)
+        # Encodage sécurisé pour éviter l'erreur Unicode
+        pdf.multi_cell(largeur, 8, titre.encode('latin-1', 'replace').decode('latin-1'))
         pdf.set_font("Arial", '', 11)
-        pdf.multi_cell(180, 8, contenu)
+        pdf.multi_cell(largeur, 8, contenu.encode('latin-1', 'replace').decode('latin-1'))
         pdf.ln(2)
     
     pdf.ln(10)
-    pdf.cell(0, 10, "Signature du medecin : ____________________", ln=True, align='R')
+    pdf.cell(largeur, 10, "Signature du medecin : ____________________", ln=True, align='R')
     
     st.download_button("Télécharger le Dossier", bytes(pdf.output()), "Dossier_Medical.pdf", "application/pdf")
