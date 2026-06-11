@@ -4,50 +4,89 @@ import os
 import datetime
 from datetime import date
 
-st.title("Certificat de Compatibilité à la Garde à Vue")
+st.title("Dossier de Visite Médicale")
 
 # --- Formulaire ---
-with st.form("certificat_garde_a_vue"):
+with st.expander("1. Informations personnelles", expanded=True):
     nom = st.text_input("Nom")
     prenom = st.text_input("Prénom")
-    date_nais = st.date_input("Date de naissance", min_value=datetime.date(1900, 1, 1))
-    lieu = st.text_input("Lieu (Commissariat / Gendarmerie)")
-    obs_details = st.text_area("Observations médicales")
-    traitements = st.text_area("Traitements")
-    conclusion = st.selectbox("Conclusion", ["Compatible", "Compatible sous réserve", "Incompatible"])
-    submit = st.form_submit_button("Générer le PDF")
+    date_nais = st.date_input("Date de naissance", min_value=datetime.date(1900, 1, 1), max_value=datetime.date.today())
+    sexe = st.selectbox("Sexe", ["Masculin", "Féminin", "Autre"])
+    adresse = st.text_area("Adresse")
+    tel = st.text_input("Téléphone")
+    urgence = st.text_input("Personne à contacter en cas d’urgence")
+    tel_urgence = st.text_input("Téléphone d'urgence")
 
-if submit:
+motif = st.text_area("2. Motif de la consultation")
+
+with st.expander("3. Antécédents médicaux"):
+    st.subheader("Personnels")
+    maladies = st.text_input("Maladies chroniques")
+    chir = st.text_input("Chirurgies / hospitalisations")
+    allergies = st.text_input("Allergies")
+    trait_en_cours = st.text_input("Traitements en cours")
+    vaccins = st.checkbox("Vaccinations à jour")
+    st.subheader("Familiaux")
+    diabete = st.text_input("Diabète")
+    ht = st.text_input("Hypertension")
+    cardio = st.text_input("Maladies cardiaques")
+    cancer = st.text_input("Cancer")
+    autres_fam = st.text_input("Autres")
+
+habitudes = st.text_area("4. Habitudes de vie")
+
+with st.expander("5. Examen clinique"):
+    col1, col2 = st.columns(2)
+    taille = col1.number_input("Taille (cm)")
+    poids = col2.number_input("Poids (kg)")
+    tension = st.text_input("Tension artérielle")
+    frequence = st.text_input("Fréquence cardiaque")
+    obs_clinique = st.text_area("Observations médicales")
+
+examens = st.text_area("6. Examens complémentaires")
+diagnostic = st.text_area("7. Diagnostic")
+traitement = st.text_area("8. Traitement")
+recommandations = st.text_area("9. Recommandations médicales")
+suivi = st.text_area("10. Suivi médical")
+
+# --- Génération PDF ---
+if st.button("Générer le Dossier Médical"):
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
-    # Marges généreuses pour éviter que le texte ne sorte
-    pdf.set_margins(20, 20, 20)
-    largeur = 170 # Largeur utile pour A4 (210 - 20 - 20)
-
+    pdf.set_margins(15, 15, 15)
+    largeur = 180 
+    
     if os.path.exists("logo.jpg"):
-        pdf.image("logo.jpg", x=20, y=20, w=30)
+        pdf.image("logo.jpg", x=15, y=15, w=30)
 
-    pdf.ln(30)
+    pdf.ln(25)
     pdf.set_font("Arial", 'B', 16)
-    pdf.multi_cell(largeur, 10, "CERTIFICAT MEDICAL DE COMPATIBILITE", 0, 'C')
-    pdf.ln(10)
+    pdf.multi_cell(largeur, 10, "DOSSIER DE VISITE MEDICALE", 0, 'C')
+    pdf.ln(5)
     
     pdf.set_font("Arial", '', 12)
-    texte = f"Je soussigné(e), médecin urgentiste, atteste avoir procédé à l'examen de {nom} {prenom}, né(e) le {date_nais}."
-    pdf.multi_cell(largeur, 8, texte.encode('latin-1', 'replace').decode('latin-1'))
+    info_patient = f"Date : {date.today()} | Patient : {nom} {prenom}"
+    pdf.multi_cell(largeur, 8, info_patient.encode('latin-1', 'replace').decode('latin-1'))
     pdf.ln(5)
-
-    # Structure verticale : Titre puis texte en dessous, jamais côte à côte
-    sections = [("Observations :", obs_details), ("Traitements :", traitements), ("Conclusion :", conclusion)]
+    
+    sections = [
+        ("Motif", motif), 
+        ("Antécédents", f"Chroniques: {maladies}, Allergies: {allergies}, Familiaux: {diabete}, {ht}, {cardio}, {cancer}, {autres_fam}"),
+        ("Examen Clinique", f"Taille: {taille}cm, Poids: {poids}kg, Tension: {tension}, Obs: {obs_clinique}"), 
+        ("Diagnostic", diagnostic),
+        ("Traitement", traitement), 
+        ("Suivi", suivi)
+    ]
     
     for titre, contenu in sections:
         pdf.set_font("Arial", 'B', 12)
         pdf.multi_cell(largeur, 8, titre.encode('latin-1', 'replace').decode('latin-1'))
-        pdf.set_font("Arial", '', 12)
+        pdf.set_font("Arial", '', 11)
         pdf.multi_cell(largeur, 8, contenu.encode('latin-1', 'replace').decode('latin-1'))
-        pdf.ln(5)
-
-    pdf.ln(10)
-    pdf.multi_cell(largeur, 8, f"Fait à {lieu}, le {date.today()}".encode('latin-1', 'replace').decode('latin-1'), 0, 'R')
+        pdf.ln(2)
     
-    st.download_button("Télécharger", bytes(pdf.output()), "Certificat.pdf", "application/pdf")
+    pdf.ln(10)
+    # Remplacement de cell par multi_cell pour éviter le débordement de la signature
+    pdf.multi_cell(largeur, 8, "Signature du medecin : ____________________", 0, 'R')
+    
+    st.download_button("Télécharger le Dossier", bytes(pdf.output()), "Dossier_Medical.pdf", "application/pdf")
