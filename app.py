@@ -1,5 +1,6 @@
 import streamlit as st
 from fpdf import FPDF
+import os
 import datetime
 from datetime import date
 
@@ -9,7 +10,6 @@ st.title("Dossier de Visite Médicale")
 with st.expander("1. Informations personnelles", expanded=True):
     nom = st.text_input("Nom")
     prenom = st.text_input("Prénom")
-    # Correction date : min_value est en 1900, plus de blocage à 2016
     date_nais = st.date_input("Date de naissance", min_value=datetime.date(1900, 1, 1), max_value=date.today())
     sexe = st.selectbox("Sexe", ["Masculin", "Féminin", "Autre"])
     adresse = st.text_area("Adresse")
@@ -26,7 +26,14 @@ traitements = st.text_input("Traitements en cours")
 diabete = st.text_input("Diabète")
 ht = st.text_input("Hypertension")
 habitudes = st.text_area("4. Habitudes de vie")
-obs_clinique = st.text_area("5. Examen clinique")
+
+with st.expander("5. Examen clinique"):
+    taille = st.number_input("Taille (cm)")
+    poids = st.number_input("Poids (kg)")
+    tension = st.text_input("Tension artérielle")
+    frequence = st.text_input("Fréquence cardiaque")
+    obs_clinique = st.text_area("Observations médicales")
+
 examens = st.text_area("6. Examens complémentaires")
 diagnostic = st.text_area("7. Diagnostic")
 traitement = st.text_area("8. Traitement")
@@ -39,7 +46,13 @@ if st.button("Générer le Dossier Médical"):
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     
-    largeur_texte = 180 # Largeur fixe pour tout
+    largeur_texte = 180 
+    
+    # Logo
+    if os.path.exists("logo.jpg"):
+        pdf.image("logo.jpg", x=15, y=15, w=30)
+    
+    pdf.ln(25) # Espace pour le logo
     
     # Titre
     pdf.set_font("Arial", 'B', 16)
@@ -47,19 +60,13 @@ if st.button("Générer le Dossier Médical"):
     pdf.cell(largeur_texte, 10, "DOSSIER DE VISITE MEDICALE", ln=True, align='C')
     pdf.ln(10)
     
-    # Infos patient
-    pdf.set_font("Arial", '', 12)
-    pdf.set_x(15)
-    pdf.cell(largeur_texte, 8, f"Date : {date.today()} | Patient : {nom} {prenom}", ln=True)
-    pdf.ln(5)
-    
-    # Sections (TITRE + CONTENU)
+    # Sections (Titre + Contenu regroupés)
     sections = [
-        ("1. INFOS PERSONNELLES", f"Né(e) le: {date_nais} | Sexe: {sexe}\nAdresse: {adresse}\nTel: {tel}\nUrgence: {urgence} ({tel_urgence})"),
+        ("1. INFOS PERSONNELLES", f"Nom: {nom} {prenom} | Né le: {date_nais} | Sexe: {sexe}\nAdresse: {adresse}\nTel: {tel}\nUrgence: {urgence} ({tel_urgence})"),
         ("2. MOTIF", motif),
-        ("3. ANTECEDENTS", f"Chroniques: {maladies}, Chir: {chir}, Allergies: {allergies}, Traitements: {traitements}, Diabète: {diabete}, Hypertension: {ht}"),
+        ("3. ANTECEDENTS", f"Maladies: {maladies}, Chir: {chir}, Allergies: {allergies}, Traitements: {traitements}, Diabète: {diabete}, Hypertension: {ht}"),
         ("4. HABITUDES DE VIE", habitudes),
-        ("5. EXAMEN CLINIQUE", obs_clinique),
+        ("5. EXAMEN CLINIQUE", f"Taille: {taille}cm, Poids: {poids}kg, Tension: {tension}, Fréquence: {frequence}\nObs: {obs_clinique}"),
         ("6. EXAMENS COMPLEMENTAIRES", examens),
         ("7. DIAGNOSTIC", diagnostic),
         ("8. TRAITEMENT", traitement),
@@ -68,16 +75,16 @@ if st.button("Générer le Dossier Médical"):
     ]
     
     for titre, contenu in sections:
-        pdf.set_x(15) # Force le retour à la marge gauche
+        pdf.set_x(15)
         pdf.set_font("Arial", 'B', 12)
         pdf.multi_cell(largeur_texte, 8, titre.encode('latin-1', 'replace').decode('latin-1'), 0, 'L')
         
-        pdf.set_x(15) # Force le retour à la marge gauche
+        pdf.set_x(15)
         pdf.set_font("Arial", '', 11)
         pdf.multi_cell(largeur_texte, 7, (contenu if contenu else "").encode('latin-1', 'replace').decode('latin-1'), 0, 'L')
         pdf.ln(2)
     
-    # Nom médecin
+    # Signature dynamique
     pdf.ln(10)
     pdf.set_x(15)
     pdf.set_font("Arial", 'B', 12)
