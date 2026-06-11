@@ -15,7 +15,8 @@ with st.expander("1. Informations personnelles", expanded=True):
 date_nais = st.date_input(
     "Date de naissance", 
     min_value=datetime.date(1900, 1, 1), 
-    max_value=datetime.date.today())
+    max_value=datetime.date.today()
+    )
     sexe = st.selectbox("Sexe", ["Masculin", "Féminin", "Autre"])
     adresse = st.text_area("Adresse")
     tel = st.text_input("Téléphone")
