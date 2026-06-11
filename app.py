@@ -1,6 +1,7 @@
 import streamlit as st
 from fpdf import FPDF
 import os
+import datetime
 from datetime import date
 
 st.title("Dossier de Visite Médicale")
@@ -9,13 +10,10 @@ st.title("Dossier de Visite Médicale")
 with st.expander("1. Informations personnelles", expanded=True):
     nom = st.text_input("Nom")
     prenom = st.text_input("Prénom")
-    import datetime # Ajoutez cet import en haut du fichier si besoin
-
-# ... dans votre formulaire :
-date_nais = st.date_input(
-    "Date de naissance", 
-    min_value=datetime.date(1900, 1, 1), 
-    max_value=datetime.date.today()
+    date_nais = st.date_input(
+        "Date de naissance", 
+        min_value=datetime.date(1900, 1, 1), 
+        max_value=datetime.date.today()
     )
     sexe = st.selectbox("Sexe", ["Masculin", "Féminin", "Autre"])
     adresse = st.text_area("Adresse")
@@ -57,32 +55,36 @@ suivi = st.text_area("10. Suivi médical")
 
 # --- Génération PDF ---
 if st.button("Générer le Dossier Médical"):
-    pdf = FPDF()
+    pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
+    pdf.set_margins(15, 15, 15)
     
     if os.path.exists("logo.jpg"):
-        pdf.image("logo.jpg", x=10, y=10, w=30)
+        pdf.image("logo.jpg", x=15, y=15, w=30)
 
+    pdf.ln(25)
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "DOSSIER DE VISITE MEDICALE", ln=True, align='C')
     pdf.ln(10)
     
     pdf.set_font("Arial", '', 12)
-    pdf.cell(0, 10, f"Date : {date.today()}", ln=True)
-    pdf.cell(0, 10, f"Patient : {nom} {prenom}", ln=True)
+    pdf.cell(0, 10, f"Date : {date.today()} | Patient : {nom} {prenom}", ln=True)
     pdf.ln(5)
     
     sections = [
-        ("Motif", motif), ("Antécédents", f"Chroniques: {maladies}, Allergies: {allergies}"),
-        ("Examen Clinique", obs_clinique), ("Diagnostic", diagnostic),
-        ("Traitement", traitement), ("Suivi", suivi)
+        ("Motif", motif), 
+        ("Antécédents", f"Chroniques: {maladies}, Allergies: {allergies}, Familiaux: {diabete}, {ht}, {cardio}, {cancer}, {autres_fam}"),
+        ("Examen Clinique", f"Taille: {taille}cm, Poids: {poids}kg, Tension: {tension}, Obs: {obs_clinique}"), 
+        ("Diagnostic", diagnostic),
+        ("Traitement", traitement), 
+        ("Suivi", suivi)
     ]
     
     for titre, contenu in sections:
         pdf.set_font("Arial", 'B', 12)
         pdf.cell(0, 10, titre, ln=True)
         pdf.set_font("Arial", '', 11)
-        pdf.multi_cell(0, 10, contenu)
+        pdf.multi_cell(180, 8, contenu)
         pdf.ln(2)
     
     pdf.ln(10)
