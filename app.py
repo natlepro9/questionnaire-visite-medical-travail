@@ -6,48 +6,68 @@ from datetime import date
 
 st.title("Dossier de Visite Médicale")
 
-# --- Formulaire simplifié pour l'exemple ---
-# (Garde ton formulaire actuel, c'est la partie PDF qui nous intéresse)
+# --- 1. Formulaire ---
+with st.expander("Informations Patient", expanded=True):
+    nom = st.text_input("Nom")
+    prenom = st.text_input("Prénom")
+    date_nais = st.date_input("Date de naissance", min_value=datetime.date(1900, 1, 1))
+    sexe = st.selectbox("Sexe", ["Masculin", "Féminin", "Autre"])
+    adresse = st.text_area("Adresse")
+    tel = st.text_input("Téléphone")
+    contact_urgence = st.text_input("Contact d'urgence")
+    tel_urgence = st.text_input("Téléphone d'urgence")
 
-if st.button("Générer le Dossier Médical"):
+nom_medecin = st.text_input("Nom du Médecin")
+motif = st.text_area("2. Motif")
+maladies = st.text_input("3. Antécédents (Maladies)")
+allergies = st.text_input("Allergies")
+fam = st.text_input("Antécédents familiaux")
+habitudes = st.text_area("4. Habitudes de vie")
+obs_cliniques = st.text_area("5. Examen clinique")
+examens = st.text_area("6. Examens complémentaires")
+diagnostic = st.text_area("7. Diagnostic")
+traitement = st.text_area("8. Traitement")
+recommandations = st.text_area("9. Recommandations")
+suivi = st.text_area("10. Suivi médical")
+
+# --- 2. Génération PDF ---
+if st.button("Générer le PDF"):
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.set_margins(15, 15, 15)
     
-    # Largeur de texte totale (180mm)
+    # Largeur fixe de 180mm. RIEN ne dépassera cette largeur.
     largeur = 180 
     
-    if os.path.exists("logo.jpg"):
-        pdf.image("logo.jpg", x=15, y=15, w=30)
-    
-    pdf.ln(25)
+    # Titre
     pdf.set_font("Arial", 'B', 16)
     pdf.multi_cell(largeur, 10, "DOSSIER DE VISITE MEDICALE", 0, 'C')
     pdf.ln(10)
     
-    # Fonction pour créer un bloc propre : Titre en gras, Contenu en dessous
-    def ajouter_section(pdf, titre, contenu):
+    # Données organisées
+    sections = [
+        ("1. INFORMATIONS PERSONNELLES", f"Patient: {nom} {prenom}\nNé le: {date_nais} | Sexe: {sexe}\nAdresse: {adresse}\nTel: {tel}\nUrgence: {contact_urgence} ({tel_urgence})"),
+        ("2. MOTIF", motif),
+        ("3. ANTECEDENTS", f"Maladies: {maladies}\nAllergies: {allergies}\nFamiliaux: {fam}"),
+        ("4. HABITUDES DE VIE", habitudes),
+        ("5. EXAMEN CLINIQUE", obs_cliniques),
+        ("6. EXAMENS COMPLEMENTAIRES", examens),
+        ("7. DIAGNOSTIC", diagnostic),
+        ("8. TRAITEMENT", traitement),
+        ("9. RECOMMANDATIONS", recommandations),
+        ("10. SUIVI MEDICAL", suivi)
+    ]
+    
+    # Impression des sections
+    for titre, contenu in sections:
         pdf.set_font("Arial", 'B', 12)
-        # Le titre prend toute la largeur
         pdf.multi_cell(largeur, 8, titre.encode('latin-1', 'replace').decode('latin-1'), 0, 'L')
         pdf.set_font("Arial", '', 11)
-        # Le contenu prend toute la largeur en dessous, avec une légère marge
-        pdf.multi_cell(largeur, 7, (contenu if contenu else "Non renseigné").encode('latin-1', 'replace').decode('latin-1'), 0, 'L')
-        pdf.ln(3) # Espace entre les sections
-
-    # Ajout des 10 sections proprement
-    ajouter_section(pdf, "1. INFORMATIONS PERSONNELLES", f"Patient: {nom} {prenom} | Né(e) le: {date_nais} | Tel: {tel}\nUrgence: {contact_urgence} ({tel_urgence})")
-    ajouter_section(pdf, "2. MOTIF", motif)
-    ajouter_section(pdf, "3. ANTECEDENTS", f"Maladies: {maladies}, Chir: {chir}, Allergies: {allergies}, Traitements: {traitements_cours}\nFamiliaux: {diabete}, {ht}, {cardio}, {cancer}")
-    ajouter_section(pdf, "4. HABITUDES DE VIE", habitudes)
-    ajouter_section(pdf, "5. EXAMEN CLINIQUE", f"Taille: {taille}cm, Poids: {poids}kg, Tension: {tension}, Fréq: {freq_card}\nObs: {obs_cliniques}")
-    ajouter_section(pdf, "6. EXAMENS COMPLEMENTAIRES", examens)
-    ajouter_section(pdf, "7. DIAGNOSTIC", diagnostic)
-    ajouter_section(pdf, "8. TRAITEMENT", traitement)
-    ajouter_section(pdf, "9. RECOMMANDATIONS", recommandations)
-    ajouter_section(pdf, "10. SUIVI MEDICAL", suivi)
-
-    # Nom du médecin en bas
+        pdf.multi_cell(largeur, 8, (contenu if contenu else "Non renseigné").encode('latin-1', 'replace').decode('latin-1'), 0, 'L')
+        pdf.ln(4)
+    
+    # Signature dynamique
     pdf.ln(10)
     pdf.set_font("Arial", 'B', 12)
     pdf.multi_cell(largeur, 8, f"Médecin : {nom_medecin}".encode('latin-1', 'replace').decode('latin-1'), 0, 'R')
