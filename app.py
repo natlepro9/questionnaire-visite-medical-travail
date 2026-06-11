@@ -9,7 +9,14 @@ st.title("Dossier de Visite Médicale")
 with st.expander("1. Informations personnelles", expanded=True):
     nom = st.text_input("Nom")
     prenom = st.text_input("Prénom")
-    date_nais = st.date_input("Date de naissance")
+    import datetime # Ajoutez cet import en haut du fichier si besoin
+
+# ... dans votre formulaire :
+date_nais = st.date_input(
+    "Date de naissance", 
+    min_value=datetime.date(1900, 1, 1), 
+    max_value=datetime.date.today()
+)
     sexe = st.selectbox("Sexe", ["Masculin", "Féminin", "Autre"])
     adresse = st.text_area("Adresse")
     tel = st.text_input("Téléphone")
