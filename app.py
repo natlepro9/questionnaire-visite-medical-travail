@@ -14,8 +14,8 @@ with st.expander("1. Informations personnelles", expanded=True):
     sexe = st.selectbox("Sexe", ["Masculin", "Féminin", "Autre"])
     adresse = st.text_area("Adresse")
     tel = st.text_input("Téléphone")
-    urgence = st.text_input("Personne à contacter en cas d’urgence")
-    tel_urgence = st.text_input("Téléphone d'urgence")
+    urgence = st.text_input("Contact d'urgence")
+    tel_urgence = st.text_input("Tel urgence")
 
 nom_medecin = st.text_input("Nom du Médecin")
 motif = st.text_area("2. Motif de la consultation")
@@ -28,8 +28,8 @@ ht = st.text_input("Hypertension")
 habitudes = st.text_area("4. Habitudes de vie")
 
 with st.expander("5. Examen clinique"):
-    taille = st.number_input("Taille (cm)")
-    poids = st.number_input("Poids (kg)")
+    taille = st.number_input("Taille (cm)", value=170.0)
+    poids = st.number_input("Poids (kg)", value=70.0)
     tension = st.text_input("Tension artérielle")
     frequence = st.text_input("Fréquence cardiaque")
     obs_clinique = st.text_area("Observations médicales")
@@ -42,32 +42,34 @@ suivi = st.text_area("10. Suivi médical")
 
 # --- Génération PDF ---
 if st.button("Générer le Dossier Médical"):
+    # Calcul de l'IMC ici, avant la génération du PDF
+    imc_val = 0
+    if taille > 0:
+        imc_val = round(poids / ((taille / 100) ** 2), 1)
+
     pdf = FPDF()
     pdf.add_page()
     pdf.set_auto_page_break(auto=True, margin=15)
     
     largeur_texte = 180 
     
-    # Logo
     if os.path.exists("logo.jpg"):
         pdf.image("logo.jpg", x=15, y=15, w=30)
     
-    pdf.ln(25) # Espace pour le logo
-    
-    # Titre
+    pdf.ln(25)
     pdf.set_font("Arial", 'B', 16)
     pdf.set_x(15)
     pdf.cell(largeur_texte, 10, "DOSSIER DE VISITE MEDICALE", ln=True, align='C')
     pdf.ln(10)
     
-    # Sections (Titre + Contenu regroupés)
+    # Sections (Titre + Contenu)
     sections = [
         ("1. INFOS PERSONNELLES", f"Nom: {nom} {prenom} | Né le: {date_nais} | Sexe: {sexe}\nAdresse: {adresse}\nTel: {tel}\nUrgence: {urgence} ({tel_urgence})"),
         ("2. MOTIF", motif),
         ("3. ANTECEDENTS", f"Maladies: {maladies}, Chir: {chir}, Allergies: {allergies}, Traitements: {traitements}, Diabète: {diabete}, Hypertension: {ht}"),
         ("4. HABITUDES DE VIE", habitudes),
-        ("5. EXAMEN CLINIQUE", f"Taille: {taille}cm, Poids: {poids}kg, Tension: {tension}, Fréquence: {frequence}\nObs: {obs_clinique}, IMC: {IMC}"),
-        ("6. PISE DE SANG", examens),
+        ("5. EXAMEN CLINIQUE", f"Taille: {taille}cm, Poids: {poids}kg, IMC: {imc_val}, Tension: {tension}, Fréquence: {frequence}\nObs: {obs_clinique}"),
+        ("6. EXAMENS COMPLEMENTAIRES", examens),
         ("7. DIAGNOSTIC", diagnostic),
         ("8. TRAITEMENT", traitement),
         ("9. RECOMMANDATIONS", recommandations),
@@ -84,7 +86,6 @@ if st.button("Générer le Dossier Médical"):
         pdf.multi_cell(largeur_texte, 7, (contenu if contenu else "").encode('latin-1', 'replace').decode('latin-1'), 0, 'L')
         pdf.ln(2)
     
-    # Signature dynamique
     pdf.ln(10)
     pdf.set_x(15)
     pdf.set_font("Arial", 'B', 12)
